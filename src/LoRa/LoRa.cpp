@@ -110,16 +110,16 @@ int LoRaClass::begin(long frequency)
     digitalWrite(_reset, HIGH);
     delay(10);
   }
-Serial.println("before SPI begin");
+// Serial.println("before SPI begin");
   // start SPI
   _spi->begin();
-Serial.println("after SPI begin");
+// Serial.println("after SPI begin");
   // check version
   uint8_t version = readRegister(REG_VERSION);
   if (version != 0x12) {
     return 0;
   }
-Serial.println("after readRegister");
+// Serial.println("after readRegister");
   // put in sleep mode
   sleep();
 

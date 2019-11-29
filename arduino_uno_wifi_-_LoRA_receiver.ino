@@ -1,7 +1,8 @@
 #include "src/LoRa/LoRa.h"
 
 // setari
-#define SERIAL_BAUDRATE 115200
+#define SERIAL_BAUDRATE 9600
+#define MAX_MESSAGE 20
 
 const long frequency = 433E6;  // LoRa Frequency
 const int csPin = 6;           // LoRa radio chip select
@@ -14,7 +15,7 @@ void setup() {
 	Serial.begin(SERIAL_BAUDRATE);
 
 	LoRa.setPins(csPin, resetPin, irqPin);
-	// LoRa.setSPIFrequency(SPIfrequency);
+	LoRa.setSPIFrequency(SPIfrequency);
 
 	if (!LoRa.begin(frequency)) {
 		Serial.println("LoRa init failed. Check your connections.");
@@ -29,15 +30,40 @@ void loop() {
 }
 
 void onReceive(int packetSize) {
-	if (packetSize == 0) return;          // if there's no packet, return
+	if (packetSize == 0) return; // if there's no packet, return
 
-	String incoming = "";
+	uint8_t incoming_int[MAX_MESSAGE] = {0};
+	char incoming_ascii[MAX_MESSAGE] = {0};
+	uint16_t i = 0, j = 0, k = 0;
+	char c;
+	int ci;
 	while (LoRa.available()) {
-		incoming += (char)LoRa.read();
+		ci = LoRa.read();
+
+		incoming_int[i++] = ci;
+
+		c = (char)ci;
+		if (c == 10 /*LF*/ || c == 13 /*CR*/) {
+			incoming_ascii[j++] = 124; /*|*/
+		} else {
+			incoming_ascii[j++] = c;
+		}
+
+		k++;
+		if (k == MAX_MESSAGE) break;
 	}
 
-	Serial.println("Message: " + incoming);
-	Serial.println("RSSI: " + String(LoRa.packetRssi()));
-	Serial.println("Snr: " + String(LoRa.packetSnr()));
-	Serial.println();
+	for (i = 0; i < MAX_MESSAGE; i++) {
+		Serial.print(incoming_int[i], DEC);
+		Serial.print(" ");
+	}
+	Serial.println("");
+
+	for (i = 0; i < MAX_MESSAGE; i++) {
+		Serial.print(incoming_ascii[i]);
+		Serial.print(" ");
+	}
+	Serial.println("");
+
+	Serial.println("");
 }
